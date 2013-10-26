@@ -40,4 +40,16 @@ describe("stack-parser", function() {
 			{line:  2, column: 1, func: 'fn1', args: [ 'arg1', ' arg2' ], url: 'http://localhost:3000/stackgen.js' }
 		]);
 	});
+
+	it("should parse stacks from Safari", function() {
+		var stack = "fn3@http://localhost:3000/stackgen.js:10:21\nfn2@http://localhost:3000/stackgen.js:6:5\nfn1@http://localhost:3000/stackgen.js:2:5\nglobal code@http://localhost:3000/stackgen.js:14:5";
+
+		var parsed = parse(stack);
+		parsed.should.have.lengthOf(3);
+		parsed.should.eql([
+			{url: 'http://localhost:3000/stackgen.js', func: 'fn3', args: '', line: 10, column: 21 },
+			{url: 'http://localhost:3000/stackgen.js', func: 'fn2', args: '', line:  6, column: 5 },
+			{url: 'http://localhost:3000/stackgen.js', func: 'fn1', args: '', line:  2, column: 5 }
+		]);
+	});
 });
