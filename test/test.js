@@ -41,6 +41,19 @@ describe("stack-parser", function() {
 		]);
 	});
 
+	it("should parse stacks from Opera (stacktrace property)", function() {
+		var stack = "Error thrown at line 179, column 4 in <anonymous function>() in http://localhost:5000/:\r\n    throw e;\r\n\r\nError initially occurred at line 158, column 3 in f2() in http://localhost:5000/:\r\n    f3();\r\ncalled from line 154, column 3 in f1() in http://localhost:5000/:\r\n    f2();\r\ncalled from line 176, column 4 in <anonymous function>() in http://localhost:5000/:\r\n    f1();";
+
+		var parsed = parse(stack);
+		parsed.should.have.lengthOf(4);
+		parsed.should.eql([
+			{line: 179, column: 4, func: '<anonymous function>', args: [], url: 'http://localhost:5000/' },
+			{line: 158, column: 3, func: 'f2', args: [], url: 'http://localhost:5000/' },
+			{line: 154, column: 3, func: 'f1', args: [], url: 'http://localhost:5000/' },
+			{line: 176, column: 4, func: '<anonymous function>', args: [], url: 'http://localhost:5000/' }
+		]);
+	});
+
 	it("should parse stacks from Safari", function() {
 		var stack = "fn3@http://localhost:3000/stackgen.js:10:21\nfn2@http://localhost:3000/stackgen.js:6:5\nfn1@http://localhost:3000/stackgen.js:2:5\nglobal code@http://localhost:3000/stackgen.js:14:5";
 
