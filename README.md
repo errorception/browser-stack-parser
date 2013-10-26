@@ -5,7 +5,7 @@ A Node.js module to parse stack traces from browsers, and try to extract as much
 
 Uses code from the awesome [TraceKit](https://github.com/occ/TraceKit) project.
 
-Parses stack traces from Chrome, Firefox, Opera, and IE>10. 
+Parses stack traces from Chrome, Firefox, Opera, Safari and IE>=10.
 
 Example
 ---
