@@ -1,5 +1,5 @@
 {
-  "name": "stack-parser",
+  "name": "browser-stack-parser",
   "version": "0.0.1",
   "description": "Parses stack traces from browsers, and tries to extract as much information from them as possible",
   "main": "index.js",
