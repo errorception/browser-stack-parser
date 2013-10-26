@@ -1,0 +1,40 @@
+<!doctype html>
+<style>
+	h1 {
+		padding: 0;
+		margin: 50px 50px 10px;
+		font-family: Helvetica, Arial, sans-serif;
+	}
+
+	pre, .textareaContainer {
+		padding: 20px;
+		margin: 0 50px;
+		background: #eee;
+	}
+
+	p {
+		margin: 10px 50px;
+		font-family: Helvetica, Arial, sans-serif;
+	}
+
+	input {
+		margin: 10px 50px;
+		font-size: 1.5em;
+		display: inline-block;
+		width: 90%;
+	}
+
+	textarea {
+		display: block;
+		width: 100%;
+		font-size: 1.1em;
+		height: 100px;
+	}
+</style>
+<h1>Stack in this browser:</h1>
+<pre><code id="stack"></code></pre>
+<p>As a string:</p>
+<div class="textareaContainer">
+	<textarea id="stackText"></textarea>
+</div>
+<script src="stackgen.js"></script>
