@@ -80,4 +80,24 @@ describe("stack-parser", function() {
 			{url: 'http://localhost:3000/stackgen.js', func: 'global code', args: '', line:  14, column: 5 }
 		]);
 	});
+
+	it("should parse stacks with function name containing spaces in gecko-style stacks", function() {
+		var stack = "my function@http://localhost:3000/stackgen.js:10:21";
+
+		var parsed = parse(stack);
+		parsed.should.have.lengthOf(1);
+		parsed.should.eql([
+			{url: 'http://localhost:3000/stackgen.js', func: 'my function', args: '', line:  10, column: 21 }
+		]);
+	});
+
+	it("should parse stacks with function name containing spaces in chrome-style stacks", function() {
+		var stack = "ReferenceError: nonExistantFunction is not defined\n    at my function (http://localhost:3000/stackgen.js:10:21)";
+
+		var parsed = parse(stack);
+		parsed.should.have.lengthOf(1);
+		parsed.should.eql([
+			{url: 'http://localhost:3000/stackgen.js', func: 'my function', line:  10, column: 21 }
+		]);
+	});
 });
