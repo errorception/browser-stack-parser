@@ -24,8 +24,8 @@ function fromStackTraceProperty(stackString) { // new Opera
 }
 
 function fromStackProperty(stackString) {
-	var chrome = /^\s*at (?:((?:\[object object\])?\S+(?: \[as \S+\])?) )?\(?((?:file|http|https):.*?):(\d+)(?::(\d+))?\)?\s*$/i,
-		gecko = /^\s*(\S*)(?:\((.*?)\))?@((?:file|http|https).*?):(\d+)(?::(\d+))?\s*$/i,
+	var chrome = /^\s*at (?:((?:\[object object\])?[\S ]*\S+(?: \[as \S+\])?) )?\(?((?:file|http|https):.*?):(\d+)(?::(\d+))?\)?\s*$/i,
+		gecko = /^\s*(\S*[ \S]*)(?:\((.*?)\))?@((?:file|http|https).*?):(\d+)(?::(\d+))?\s*$/i,
 		lines = stackString.split('\n'),
 		stack = [],
 		parts;
