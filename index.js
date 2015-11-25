@@ -1,74 +1,95 @@
 var UNKNOWN_FUNCTION = "<unknown>";
 
-function fromStackTraceProperty(stackString) { // new Opera
-	var testRE = / line (\d+), column (\d+) in (?:<anonymous function: ([^>]+)>|([^\)]+))\((.*)\) in (.*):\s*$/i,
-		lines = stackString.split('\n'),
-		stack = [],
-		parts;
+var chromeOrIE = /\s+at .*(\S+\:\d+|\(native\))/,
+	firefoxOrSafari = /(^|@)\S+\:\d+/;
 
-	lines = lines.map(function(str) { return str.trim(); }).filter(function(str) { return !!str; });
-
-	for (var i = 0, j = lines.length; i < j; i += 2) {
-		if((parts = testRE.exec(lines[i]))) {
-			stack.push({
-				line: +parts[1],
-				column: +parts[2],
-				func: parts[3] || parts[4],
-				args: parts[5] ? parts[5].split(',') : [],
-				url: parts[6]
-			});
-		}
+function extractLocation(urlLike) {
+	if (urlLike.indexOf(':') === -1) {
+		return [urlLike];
 	}
 
-	return stack.length?stack:null;
+	var locationParts = urlLike.replace(/[\(\)\s]/g, '').split(':');
+	var lastNumber = locationParts.pop();
+	var possibleNumber = locationParts[locationParts.length - 1];
+
+	if (!isNaN(parseFloat(possibleNumber)) && isFinite(possibleNumber)) {
+		var lineNumber = locationParts.pop();
+		return [locationParts.join(':'), lineNumber, lastNumber];
+	} else {
+		return [locationParts.join(':'), lastNumber, undefined];
+	}
 }
 
-function fromStackProperty(stackString) {
-	var chrome = /^\s*at (?:((?:\[object object\])?[\S ]*\S+(?: \[as \S+\])?) )?\(?((?:file|http|https):.*?):(\d+)(?::(\d+))?\)?\s*$/i,
-		gecko = /^\s*(\S*[ \S]*)(?:\((.*?)\))?@((?:file|http|https).*?):(\d+)(?::(\d+))?\s*$/i,
-		lines = stackString.split('\n'),
-		stack = [],
-		parts;
+function parseChromeOrIE(stackString) {
+	return stackString.split("\n").filter(function(line) {
+		return !!line.match(chromeOrIE);
+	}).map(function(line) {
+		var tokens = line.replace(/^\s+/, "").split(/\s+/).slice(1);
+		var locationParts = extractLocation(tokens.pop());
+		var functionName = tokens.join(" ") || UNKNOWN_FUNCTION;
 
-	for (var i = 0, j = lines.length; i < j; ++i) {
-		if ((parts = gecko.exec(lines[i]))) {
-			stack.push({
-				url: parts[3],
-				func: parts[1] || UNKNOWN_FUNCTION,
-				args: parts[2] ? parts[2].split(',') : '',
-				line: +parts[4],
-				column: parts[5] ? +parts[5] : null
-			});
-		} else if ((parts = chrome.exec(lines[i]))) {
-			stack.push({
-				url: parts[2],
-				func: parts[1] || UNKNOWN_FUNCTION,
-				line: +parts[3],
-				column: parts[4] ? +parts[4] : null
-			});
+		return {
+			url: locationParts[0],
+			func: functionName.trim(),
+			line: +locationParts[1],
+			column: +locationParts[2] ? +locationParts[2] : null
+		};
+	});
+}
+
+function parseFirefoxOrSafari(stackString) {
+	return stackString.split("\n").filter(function(line) {
+		return !!line.match(firefoxOrSafari);
+	}).map(function(line) {
+		var tokens = line.split('@');
+		var locationParts = extractLocation(tokens.pop());
+		var functionName = tokens.shift() || UNKNOWN_FUNCTION;
+
+		return {
+			url: locationParts[0],
+			func: functionName.trim(),
+			line: +locationParts[1],
+			column: locationParts[2] ? +locationParts[2] : null
+		};
+	});
+}
+
+function parseOpera(stackString) {
+	// Opera <= 11 support dropped. 12+ only.
+	return stackString.split('\n').filter(function (line) {
+		return !!line.match(chromeOrIE) && !line.match(/^Error created at/);
+	}).map(function (line) {
+		var tokens = line.split('@');
+		var locationParts = extractLocation(tokens.pop());
+		var functionCall = (tokens.shift() || '');
+		var functionName = functionCall
+			.replace(/<anonymous function(: (\w+))?>/, '$2')
+			.replace(/\([^\)]*\)/g, '') || UNKNOWN_FUNCTION;
+
+		var argsRaw;
+		if (functionCall.match(/\(([^\)]*)\)/)) {
+			argsRaw = functionCall.replace(/^[^\(]+\(([^\)]*)\)$/, '$1');
 		}
-	}
-
-	return stack.length?stack:null;
+		var args = (argsRaw === undefined || argsRaw === '[arguments not available]') ? "" : argsRaw.split(',');
+		return {
+			url: locationParts[0],
+			func: functionName.trim(),
+			line: +locationParts[1],
+			column: locationParts[2] ? +locationParts[2] : null
+		};
+	});
 }
 
 module.exports = function(stackString) {
 	stackString = stackString.trim();
-	var stack;
 
-	try {
-		stack = fromStackTraceProperty(stackString);
-		if(stack) return stack;
-	} catch(e) {
-		console.err(e);
+	if(stackString.match(chromeOrIE) && stackString.match(/Error thrown at/)) {
+		return parseOpera(stackString);
+	} else if(stackString.match(chromeOrIE)) {
+		return parseChromeOrIE(stackString);
+	} else if(stackString.match(firefoxOrSafari)) {
+		return parseFirefoxOrSafari(stackString);
+	} else {
+		return [];
 	}
-
-	try {
-		stack = fromStackProperty(stackString);
-		if(stack) return stack;
-	} catch(e) {
-		console.err(e);
-	}
-
-	return [];
-};
+}
