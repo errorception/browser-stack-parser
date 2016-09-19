@@ -9,7 +9,7 @@
   "author": "Rakesh Pai <rakeshpai@errorception.com>",
   "license": "MIT",
   "devDependencies": {
-    "mocha": "^2.3.4",
-    "should": "^7.1.1"
+    "mocha": "^3.0.2",
+    "should": "^11.1.0"
   }
 }
